@@ -178,6 +178,45 @@ def test_agenda():
     print("agenda OK")
 
 
+def test_tamanho_pagina_recusado():
+    """Servidor real (03/11/2026) devolveu 400 para tamanhoPagina=500. O cliente
+    precisa descer até um tamanho aceito, lembrar dele e não derrubar a coleta."""
+    import app.pncp as pn
+    pn.time.sleep = lambda s: None
+    chamadas = []
+
+    def h(req):
+        q = dict(req.url.params)
+        chamadas.append((req.url.path.rsplit("/", 1)[-1], q.get("tamanhoPagina")))
+        if req.url.path.endswith("/proposta") and int(q["tamanhoPagina"]) > 50:
+            return httpx.Response(400, json={"message": "must be less than or equal to 50", "status": "400"})
+        if req.url.path.endswith("/itens") and "tamanhoPagina" in q:
+            return httpx.Response(400, json={"message": "parametro desconhecido"})
+        return handler(req)
+
+    antigo = config.PAGE_SIZE
+    config.PAGE_SIZE = 500
+    try:
+        c = PNCPClient(transport=httpx.MockTransport(h), per_second=0)
+        paginas = list(c.propostas_abertas("20261103", 6))
+        assert c.tam_lista == 50, c.tam_lista
+        assert sum(len(p) for p in paginas) == len(DADOS[6])
+        tams = [t for n, t in chamadas if n == "proposta"]
+        assert tams[:3] == ["500", "100", "50"], tams          # desceu a escada
+        n0 = len(chamadas)
+        list(c.propostas_abertas("20261103", 8))
+        assert [t for n, t in chamadas[n0:]] == ["50"]          # lembrou o tamanho
+        its = c.itens("11111111000111", 2026, 1)
+        assert c.tam_itens == 0 and len(its) == 2               # itens sem paginação
+        n1 = len(chamadas)
+        c.itens("22222222000122", 2026, 2)
+        assert chamadas[n1:] == [("itens", None)]               # direto, sem tentar de novo
+    finally:
+        config.PAGE_SIZE = antigo
+    print("tamanho de página OK")
+
+
 if __name__ == "__main__":
     test_tudo()
     test_agenda()
+    test_tamanho_pagina_recusado()
