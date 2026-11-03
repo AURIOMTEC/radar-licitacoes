@@ -289,6 +289,7 @@ def _loop():
             feito = agenda.tick()
             if feito:
                 log.info("Agendador executou: %s", feito)
+                time.sleep(5)   # nunca gira sem pausa, mesmo se algo voltar na hora
                 continue
         except Exception:  # noqa: BLE001
             log.exception("Erro no agendador")

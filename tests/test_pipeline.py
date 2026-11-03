@@ -175,6 +175,12 @@ def test_agenda():
     assert agenda.tick(t(6, 0), client=client(), sender=snd, relogio=lambda: t(6, 0)) is None
     assert agenda.tick(t(7, 1), client=client(), sender=snd, relogio=lambda: t(7, 1)) == "alertas"
     assert agenda.tick(t(9, 0), client=client(), sender=snd, relogio=lambda: t(9, 0)) is None  # 1x por dia
+    # coleta manual em andamento dentro da janela: agendador não age (sem laço)
+    collector._run_lock.acquire()
+    try:
+        assert agenda.tick(t(3, 0), client=client(), sender=snd, relogio=lambda: t(3, 0)) is None
+    finally:
+        collector._run_lock.release()
     p = agenda.proximas(t(14, 0))
     assert p["coleta"] == t(1, 30) + timedelta(days=1) and p["alertas"] == t(7, 0) + timedelta(days=1)
     print("agenda OK")

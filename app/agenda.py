@@ -62,6 +62,10 @@ def tick(agora_dt: datetime | None = None, client=None, sender=None, relogio=Non
     `relogio` permite simular o tempo nos testes."""
     relogio = relogio or collector.agora
     agora_dt = agora_dt or relogio()
+    # Coleta manual (ou outra) em andamento: não disputa a trava. Sem isto, o
+    # ciclo voltaria "ignorado" na hora e o laço chamaria o tick sem pausa.
+    if collector.em_andamento():
+        return None
     if na_janela(agora_dt):
         ini = inicio_janela(agora_dt)
         # se falhou (PNCP fora do ar), tenta de novo só depois de 30 min
