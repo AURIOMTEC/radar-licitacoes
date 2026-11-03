@@ -37,7 +37,13 @@ PNCP_PORTAL_URL = _env("PNCP_PORTAL_URL", "https://pncp.gov.br")
 # 12 Credenciamento. Leilões (1, 13) ficam de fora: neles o órgão VENDE.
 MODALIDADES_COLETA = _list_int("MODALIDADES_COLETA", "4,5,6,7,8,10,12")
 
-PAGE_SIZE = _int("PNCP_PAGE_SIZE", 500)          # máximo documentado: 500
+# O manual diz máximo 500, mas a API real só aceita até 50 ("Tamanho de página
+# inválido" para 100 e 500 — teste na VPS em 03/11/2026).
+PAGE_SIZE = _int("PNCP_PAGE_SIZE", 50)
+# dataFinal do /contratacoes/proposta é o LIMITE DE ENCERRAMENTO das propostas:
+# com a data de hoje a API devolve só o que encerra hoje (17 pregões), com +30 dias
+# 17.549, com +2 anos 17.729 (medido em 03/11/2026). Por isso: hoje + N dias.
+DATA_FINAL_DIAS = _int("DATA_FINAL_DIAS", 730)
 HTTP_TIMEOUT = _int("PNCP_TIMEOUT_S", 60)
 # VPS de 2 núcleos: pouca concorrência, taxa baixa e pausa entre lotes
 REQ_POR_SEGUNDO = float(_env("PNCP_REQ_POR_SEGUNDO", "2"))

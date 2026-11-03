@@ -112,7 +112,8 @@ def _fechar_log(con, log_id: int, status: str, **kw):
 def coletar_editais(client: PNCPClient) -> dict:
     inicio = agora()
     visto = iso(inicio)
-    data_final = inicio.strftime("%Y%m%d")
+    # dataFinal = limite de encerramento das propostas (ver config.DATA_FINAL_DIAS)
+    data_final = (inicio + timedelta(days=config.DATA_FINAL_DIAS)).strftime("%Y%m%d")
     stats = {"novos": 0, "atualizados": 0, "erros": 0}
     erros_msg = []
     with db.conn() as con:

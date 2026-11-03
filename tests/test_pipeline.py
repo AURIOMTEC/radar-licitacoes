@@ -70,6 +70,8 @@ def handler(req: httpx.Request) -> httpx.Response:
     q = dict(req.url.params)
     if p.endswith("/v1/contratacoes/proposta"):
         assert "dataFinal" in q and len(q["dataFinal"]) == 8
+        # dataFinal é limite de encerramento: precisa estar bem no futuro
+        assert q["dataFinal"] >= (datetime.now() + timedelta(days=365)).strftime("%Y%m%d"), q["dataFinal"]
         lst = DADOS.get(int(q["codigoModalidadeContratacao"]), [])
         tam, pag = int(q["tamanhoPagina"]), int(q["pagina"])
         if not lst:
@@ -198,13 +200,13 @@ def test_tamanho_pagina_recusado():
     config.PAGE_SIZE = 500
     try:
         c = PNCPClient(transport=httpx.MockTransport(h), per_second=0)
-        paginas = list(c.propostas_abertas("20261103", 6))
+        paginas = list(c.propostas_abertas("20281103", 6))
         assert c.tam_lista == 50, c.tam_lista
         assert sum(len(p) for p in paginas) == len(DADOS[6])
         tams = [t for n, t in chamadas if n == "proposta"]
         assert tams[:3] == ["500", "100", "50"], tams          # desceu a escada
         n0 = len(chamadas)
-        list(c.propostas_abertas("20261103", 8))
+        list(c.propostas_abertas("20281103", 8))
         assert [t for n, t in chamadas[n0:]] == ["50"]          # lembrou o tamanho
         its = c.itens("11111111000111", 2026, 1)
         assert c.tam_itens == 0 and len(its) == 2               # itens sem paginação

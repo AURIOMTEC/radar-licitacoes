@@ -48,7 +48,7 @@ Fonte: PNCP (Portal Nacional de Contratações Públicas), API pública e gratui
 
 | O quê | Quando | Peso |
 |---|---|---|
-| Lista nacional de editais + purga | 1x por noite, dentro de `JANELA_COLETA` (01:30–05:30) | ~100–200 requisições |
+| Lista nacional de editais + purga | 1x por noite, dentro de `JANELA_COLETA` (01:30–05:30) | ~400 páginas de 50 só de pregão eletrônico (medido em 03/11/2026: 17,7 mil abertos); todas as modalidades devem passar de 1.000 requisições, ~10–15 min a 2 req/s |
 | Itens dos editais | mesma janela, lotes de 300 com pausa de 20 s, 2 em paralelo, 2 req/s, até a janela fechar | 1 requisição por edital novo |
 | Alertas WhatsApp | 1x por dia em `ALERTA_HORARIO` (07:00) | consultas no SQLite |
 | Busca na tela | quando alguém busca | FTS5 (índice), milissegundos |
@@ -89,9 +89,14 @@ visto. Marque "Enviar agora também os já abertos" se quiser receber esses edit
 
 | Etapa | Endpoint |
 |---|---|
-| Editais abertos | `GET /api/consulta/v1/contratacoes/proposta?dataFinal=AAAAMMDD&codigoModalidadeContratacao=N&pagina=P&tamanhoPagina=500` |
+| Editais abertos | `GET /api/consulta/v1/contratacoes/proposta?dataFinal=AAAAMMDD&codigoModalidadeContratacao=N&pagina=P&tamanhoPagina=50` |
 | Itens | `GET /api/pncp/v1/orgaos/{cnpj}/compras/{ano}/{sequencial}/itens` |
 | Link público | `https://pncp.gov.br/app/editais/{cnpj}/{ano}/{sequencial}` |
+
+### Comportamento real da API (medido na VPS em 03/11/2026, difere do manual)
+- `tamanhoPagina` máximo **50** (100 e 500 → 400 "Tamanho de página inválido").
+- `dataFinal` é o **limite de encerramento** das propostas: com a data de hoje só vêm as que
+  encerram hoje. O app usa hoje + `DATA_FINAL_DIAS` (730).
 
 ### Limites
 - Só cobre o que foi publicado no PNCP. Estatais com portal próprio e municípios que publicam só no
