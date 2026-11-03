@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>{{ 'Editar' if b.id else 'Nova' }} busca salva</h2>
+<form method="post" action="/buscas/salvar" class="form">
+  {% if b.id %}<input type="hidden" name="id" value="{{ b.id }}">{% endif %}
+  <label>Nome <input name="nome" value="{{ b.nome }}" required maxlength="80"></label>
+  <label>Busca <input name="consulta" value="{{ b.consulta }}" required
+         placeholder='inversor frequencia OU "soft starter" -locacao'></label>
+  <fieldset><legend>UFs (nenhuma marcada = Brasil inteiro)</legend>
+    <div class="grade ufs">{% for u in UFS %}<label><input type="checkbox" name="uf" value="{{u}}" {{ 'checked' if u in b.ufs_l }}>{{u}}</label>{% endfor %}</div>
+  </fieldset>
+  <fieldset><legend>Modalidades (nenhuma = todas)</legend>
+    <div class="grade">{% for m in COLETA %}<label><input type="checkbox" name="mod" value="{{m}}" {{ 'checked' if m in b.mods_l }}>{{ MODALIDADES[m] }}</label>{% endfor %}</div>
+  </fieldset>
+  <div class="dois">
+    <label>Valor estimado mínimo <input name="vmin" value="{{ b.valor_min|num if b.valor_min is not none }}" inputmode="decimal"></label>
+    <label>Valor estimado máximo <input name="vmax" value="{{ b.valor_max|num if b.valor_max is not none }}" inputmode="decimal"></label>
+  </div>
+  <label>WhatsApp para alertas <input name="whatsapp" value="{{ b.whatsapp }}" placeholder="14998317656, 14999999999">
+    <small>Separe vários números por vírgula. DDD obrigatório; o 55 é colocado automaticamente.</small></label>
+  <label class="chk"><input type="checkbox" name="ativo" value="1" {{ 'checked' if b.ativo }}> Alerta ativo</label>
+  <label class="chk"><input type="checkbox" name="retroativo" value="1"> Enviar agora também os editais que <b>já estão abertos</b> (senão, só os que aparecerem daqui pra frente)</label>
+  {% if not wa_ativo %}<p class="aviso erro">WhatsApp ainda não configurado no servidor — a busca será salva mesmo assim.</p>{% endif %}
+  <div class="rod"><button type="submit">Salvar</button> <a href="/buscas">cancelar</a></div>
+</form>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block body %}
+<form class="busca" method="get" action="/">
+  <div class="linha">
+    <input type="search" name="q" value="{{ f.consulta }}" autofocus
+           placeholder='O que você vende? ex.: inversor de frequência OU "soft starter" -locação'>
+    <button type="submit">Buscar</button>
+  </div>
+  <div class="filtros">
+    <details {{ 'open' if f.ufs }}>
+      <summary>UF {% if f.ufs %}<b>{{ f.ufs|join(', ') }}</b>{% else %}<i>todas</i>{% endif %}</summary>
+      <div class="grade ufs">
+        {% for u in UFS %}<label><input type="checkbox" name="uf" value="{{u}}" {{ 'checked' if u in f.ufs }}>{{u}}</label>{% endfor %}
+      </div>
+    </details>
+    <details {{ 'open' if f.modalidades }}>
+      <summary>Modalidade {% if f.modalidades %}<b>{{ f.modalidades|length }} sel.</b>{% else %}<i>todas</i>{% endif %}</summary>
+      <div class="grade">
+        {% for m in COLETA %}<label><input type="checkbox" name="mod" value="{{m}}" {{ 'checked' if m in f.modalidades }}>{{ MODALIDADES[m] }}</label>{% endfor %}
+      </div>
+    </details>
+    <label class="campo">Valor de <input name="vmin" value="{{ f.valor_min|num if f.valor_min is not none }}" inputmode="decimal" placeholder="mín."></label>
+    <label class="campo">até <input name="vmax" value="{{ f.valor_max|num if f.valor_max is not none }}" inputmode="decimal" placeholder="máx."></label>
+    <label class="campo">Ordenar
+      <select name="ordem">
+        {% for k, n in [('encerramento','Prazo mais curto'),('relevancia','Relevância'),('valor','Maior valor'),('publicacao','Mais recentes')] %}
+        <option value="{{k}}" {{ 'selected' if f.ordem == k }}>{{n}}</option>{% endfor %}
+      </select></label>
+    <label class="chk"><input type="checkbox" name="enc" value="1" {{ 'checked' if f.incluir_encerrados }}> incluir encerrados</label>
+  </div>
+</form>
+
+{% if erro %}<p class="aviso erro">{{ erro }}</p>{% endif %}
+
+{% if not res and not erro %}
+  <section class="vazio">
+    <p><b>{{ "{:,}".format(total_base).replace(",", ".") }}</b> editais com propostas abertas na base
+      {% if ultima %}· atualizada em {{ ultima|dt }}{% endif %}
+      {% if rodando %}· <span class="pulse">coleta em andamento</span>{% endif %}</p>
+    {% if total_base == 0 %}<p class="aviso">A base ainda está vazia. A primeira coleta (Brasil inteiro) começa sozinha alguns segundos após iniciar o app — acompanhe em <a href="/status">Coleta</a>.</p>{% endif %}
+    <ul class="dicas">
+      <li><code>inversor frequencia</code> — as duas palavras, em qualquer ordem (acentos e plural não importam)</li>
+      <li><code>"soft starter"</code> — frase exata</li>
+      <li><code>medidor vazao OU hidrometro</code> — qualquer um dos dois</li>
+      <li><code>nobreak -locacao</code> — exclui editais com a palavra</li>
+      <li>A busca olha o objeto do edital <b>e a descrição de cada item</b> — é ali que o produto costuma aparecer.</li>
+    </ul>
+  </section>
+{% endif %}
+
+{% if res %}
+  <div class="resumo">
+    <span><b>{{ res.total }}</b> edital(is) · soma estimada {{ res.soma|brl }}</span>
+    <span class="acoes">
+      <a class="btn sec" href="/export.csv?{{ qs }}">Exportar CSV</a>
+      <a class="btn" href="/buscas/nova?{{ qs }}">🔔 Criar alerta desta busca</a>
+    </span>
+  </div>
+
+  {% for c in res.resultados %}
+  {% set pz = c.data_encerramento|prazo %}
+  <article class="card">
+    <div class="cab">
+      <span class="tag">{{ c.modalidade_nome }}</span>
+      {% if c.srp %}<span class="tag cinza">Registro de preços</span>{% endif %}
+      <span class="local">{{ c.municipio }}/{{ c.uf }}</span>
+      <span class="prazo {{ pz[1] }}">⏳ {{ c.data_encerramento|dt }}{% if pz[0] %} · {{ pz[0] }}{% endif %}</span>
+    </div>
+    <h3><a href="/edital/{{ c.id }}">{{ c.objeto_html|safe }}</a></h3>
+    <div class="org">{{ c.orgao_nome }}{% if c.unidade_nome and c.unidade_nome != c.orgao_nome %} — {{ c.unidade_nome }}{% endif %}</div>
+    {% if c.itens_casados %}
+    <ul class="itens">
+      {% for i in c.itens_casados[:4] %}
+      <li><span class="n">item {{ i.numero }}</span> {{ i.h|safe }}
+        <span class="q">{% if i.quantidade %}{{ i.quantidade|num }} {{ i.unidade or '' }}{% endif %}
+        {% if i.valor_unit and not i.sigiloso %} · {{ i.valor_unit|brl }}/un{% endif %}</span></li>
+      {% endfor %}
+      {% if c.itens_casados|length > 4 %}<li class="mais">+ {{ c.itens_casados|length - 4 }} itens</li>{% endif %}
+    </ul>
+    {% elif c.itens_status == 'pendente' %}
+    <div class="pend">itens ainda não baixados</div>
+    {% endif %}
+    <div class="rod">
+      <span class="valor">{{ c.valor_estimado|brl }}</span>
+      <a href="{{ c.url_pncp }}" target="_blank" rel="noopener">Ver no PNCP ↗</a>
+      {% if c.link_origem %}<a href="{{ c.link_origem }}" target="_blank" rel="noopener">Sistema de disputa ↗</a>{% endif %}
+    </div>
+  </article>
+  {% endfor %}
+
+  {% if res.paginas > 1 %}
+  <nav class="pag">
+    {% if res.pagina > 1 %}<a href="/?{{ qs }}&p={{ res.pagina - 1 }}">← anterior</a>{% endif %}
+    <span>página {{ res.pagina }} de {{ res.paginas }}</span>
+    {% if res.pagina < res.paginas %}<a href="/?{{ qs }}&p={{ res.pagina + 1 }}">próxima →</a>{% endif %}
+  </nav>
+  {% endif %}
+{% endif %}
+{% endblock %}

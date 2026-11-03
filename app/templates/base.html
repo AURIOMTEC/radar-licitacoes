@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Radar de Licitações{% endblock %}</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/">Radar<span>de Licitações</span></a>
+  <nav>
+    <a href="/" class="{{ 'on' if request.url.path == '/' }}">Buscar</a>
+    <a href="/buscas" class="{{ 'on' if request.url.path.startswith('/buscas') }}">Alertas</a>
+    <a href="/status" class="{{ 'on' if request.url.path == '/status' }}">Coleta</a>
+  </nav>
+</header>
+<main>
+{% block body %}{% endblock %}
+</main>
+<footer>Fonte: Portal Nacional de Contratações Públicas (PNCP) — API pública de consulta. Confira sempre o edital original. · <span title="versão">{{ VERSAO }}</span></footer>
+</body>
+</html>

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="resumo">
+  <h2>Alertas no WhatsApp</h2>
+  <a class="btn" href="/buscas/nova">+ Nova busca salva</a>
+</div>
+{% if msg %}<p class="aviso">{{ msg }}</p>{% endif %}
+{% if not wa_ativo %}<p class="aviso erro">WhatsApp não configurado (WHATSAPP_PROVIDER={{ provider }}). As buscas ficam salvas, mas os alertas só aparecem no log até configurar Evolution API ou Z-API no <code>.env</code>.</p>{% endif %}
+
+{% if buscas %}
+<div class="tabela"><table>
+  <thead><tr><th>Nome</th><th>Busca</th><th>Filtros</th><th>WhatsApp</th><th>Enviados</th><th></th></tr></thead>
+  <tbody>
+  {% for b in buscas %}
+  <tr class="{{ '' if b.ativo else 'off' }}">
+    <td><b>{{ b.nome }}</b>{% if not b.ativo %} <span class="tag cinza">pausada</span>{% endif %}</td>
+    <td><a href="/?q={{ b.consulta|urlencode }}{% for u in b.ufs.split(',') if u %}&uf={{u}}{% endfor %}{% for m in b.modalidades.split(',') if m %}&mod={{m}}{% endfor %}"><code>{{ b.consulta }}</code></a></td>
+    <td class="mut">{{ b.ufs or 'todas UFs' }}{% if b.modalidades %} · {{ b.modalidades.split(',')|length }} modal.{% endif %}
+      {% if b.valor_min %} · ≥ {{ b.valor_min|brl }}{% endif %}{% if b.valor_max %} · ≤ {{ b.valor_max|brl }}{% endif %}</td>
+    <td class="mut">{{ b.whatsapp or '—' }}</td>
+    <td>{{ b.enviados }}{% if b.ultimo %}<div class="mut">{{ b.ultimo|dt }}</div>{% endif %}</td>
+    <td class="acoes">
+      <a href="/buscas/{{ b.id }}/editar">editar</a>
+      <form method="post" action="/buscas/{{ b.id }}/excluir" onsubmit="return confirm('Excluir esta busca?')"><button class="link">excluir</button></form>
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% else %}
+<p class="vazio">Nenhuma busca salva. Faça uma busca na tela principal e clique em <b>Criar alerta desta busca</b>.</p>
+{% endif %}
+
+<section class="box">
+  <h3>Testar envio</h3>
+  <form method="post" action="/whatsapp/teste" class="inline">
+    <input name="numero" placeholder="(14) 99999-9999" required>
+    <button>Enviar mensagem de teste</button>
+  </form>
+</section>
+{% endblock %}

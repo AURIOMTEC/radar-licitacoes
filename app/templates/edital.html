@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{{ c.objeto[:60] }} — Radar{% endblock %}
+{% block body %}
+<p><a href="javascript:history.back()">← voltar</a></p>
+<article class="card det">
+  <div class="cab">
+    <span class="tag">{{ c.modalidade_nome }}</span>
+    {% if c.srp %}<span class="tag cinza">Registro de preços</span>{% endif %}
+    {% if c.modo_disputa_nome %}<span class="tag cinza">{{ c.modo_disputa_nome }}</span>{% endif %}
+    <span class="local">{{ c.municipio }}/{{ c.uf }}</span>
+  </div>
+  <h2>{{ c.objeto }}</h2>
+  {% if c.info_compl %}<p class="compl">{{ c.info_compl }}</p>{% endif %}
+  <dl>
+    <dt>Órgão</dt><dd>{{ c.orgao_nome }} <span class="mut">CNPJ {{ c.orgao_cnpj }}</span></dd>
+    <dt>Unidade</dt><dd>{{ c.unidade_nome }}</dd>
+    <dt>Nº / processo</dt><dd>{{ c.numero_compra }} · {{ c.processo }}</dd>
+    <dt>Propostas</dt><dd>de {{ c.data_abertura|dt }} até <b>{{ c.data_encerramento|dt }}</b></dd>
+    <dt>Valor estimado</dt><dd><b>{{ c.valor_estimado|brl }}</b></dd>
+    <dt>Situação</dt><dd>{{ c.situacao_nome }}</dd>
+    <dt>Publicado</dt><dd>{{ c.data_publicacao|dt }} · ID PNCP {{ c.ctrl }}</dd>
+  </dl>
+  <div class="rod">
+    <a class="btn" href="{{ url }}" target="_blank" rel="noopener">Edital e anexos no PNCP ↗</a>
+    {% if c.link_origem %}<a class="btn sec" href="{{ c.link_origem }}" target="_blank" rel="noopener">Sistema de disputa ↗</a>{% endif %}
+  </div>
+</article>
+
+<h3>Itens ({{ itens|length }})</h3>
+{% if c.itens_status == 'pendente' %}<p class="aviso">Itens ainda não foram baixados para este edital.</p>{% endif %}
+{% if itens %}
+<div class="tabela"><table>
+  <thead><tr><th>#</th><th>Descrição</th><th>Qtd</th><th>Un.</th><th>Valor unit.</th><th>Total</th></tr></thead>
+  <tbody>
+  {% for i in itens %}
+  <tr><td>{{ i.numero }}</td><td>{{ i.descricao }}{% if i.info_compl %}<div class="mut">{{ i.info_compl[:300] }}</div>{% endif %}</td>
+      <td class="r">{{ i.quantidade|num }}</td><td>{{ i.unidade or '' }}</td>
+      <td class="r">{{ 'sigiloso' if i.sigiloso else i.valor_unit|brl }}</td>
+      <td class="r">{{ 'sigiloso' if i.sigiloso else i.valor_total|brl }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% endif %}
+{% endblock %}

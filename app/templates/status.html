@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="resumo">
+  <h2>Coleta PNCP</h2>
+  <span class="acoes">
+    {% if rodando %}<span class="pulse">coleta em andamento…</span>{% endif %}
+    <form method="post" action="/coletar" class="inline"><input type="hidden" name="tipo" value="editais"><button {{ 'disabled' if rodando }} title="Lista nacional de editais abertos (leve, alguns minutos)">Atualizar editais agora</button></form>
+    <form method="post" action="/coletar" class="inline"><input type="hidden" name="tipo" value="itens"><button class="sec" {{ 'disabled' if rodando }} title="Um lote de {{ cfg.ITENS_LOTE }} editais">Baixar 1 lote de itens</button></form>
+    <form method="post" action="/coletar" class="inline"><input type="hidden" name="tipo" value="alertas"><button class="sec" {{ 'disabled' if rodando }}>Só alertas</button></form>
+  </span>
+</div>
+{% if msg %}<p class="aviso">{{ msg }}</p>{% endif %}
+
+<div class="kpis">
+  <div><b>{{ "{:,}".format(st.total).replace(",", ".") }}</b><span>editais abertos</span></div>
+  <div><b>{{ "{:,}".format(st.itens).replace(",", ".") }}</b><span>itens indexados</span></div>
+  <div><b>{{ "{:,}".format(st.itens_pend).replace(",", ".") }}</b><span>editais aguardando itens</span></div>
+  <div><b>{{ st.itens_erro }}</b><span>com erro nos itens</span></div>
+</div>
+<p class="mut">Coleta automática: {{ 'ligada' if cfg.COLETA_AUTOMATICA else 'desligada' }} · janela da madrugada {{ cfg.JANELA_COLETA }}
+  {% if prox.na_janela %}(<b>em andamento agora</b>){% else %}(próxima {{ prox.coleta.strftime('%d/%m %H:%M') }}){% endif %}
+  · alertas de WhatsApp às {{ cfg.ALERTA_HORARIO }} (próximo {{ prox.alertas.strftime('%d/%m %H:%M') }}).<br>
+  Modalidades: {{ cfg.MODALIDADES_COLETA|join(', ') }}. Itens em lotes de {{ cfg.ITENS_LOTE }} com pausa de {{ cfg.ITENS_PAUSA_S }} s, {{ cfg.ITENS_CONCORRENCIA }} em paralelo, {{ cfg.REQ_POR_SEGUNDO|int }} req/s.
+  Os botões acima são para uso pontual; o trabalho pesado fica para a madrugada.</p>
+
+<h3>Últimas execuções</h3>
+<div class="tabela"><table>
+  <thead><tr><th>Tipo</th><th>Início</th><th>Fim</th><th>Status</th><th>Novos</th><th>Atualiz./removidos</th><th>Requisições</th><th>Erros</th><th>Obs.</th></tr></thead>
+  <tbody>{% for c in st.coletas %}
+  <tr><td>{{ c.tipo }}</td><td>{{ c.inicio|dt('%d/%m %H:%M:%S') }}</td><td>{{ c.fim|dt('%H:%M:%S') }}</td>
+      <td><span class="st {{ c.status }}">{{ c.status }}</span></td><td class="r">{{ c.novos }}</td><td class="r">{{ c.atualizados }}</td>
+      <td class="r">{{ c.requisicoes }}</td><td class="r">{{ c.erros }}</td><td class="mut">{{ (c.msg or '')[:160] }}</td></tr>
+  {% endfor %}</tbody>
+</table></div>
+
+<div class="dois">
+  <div><h3>Por UF</h3><div class="tabela"><table><tbody>
+    {% for r in st.por_uf %}<tr><td>{{ r.uf or '?' }}</td><td class="r">{{ r.n }}</td></tr>{% endfor %}
+  </tbody></table></div></div>
+  <div><h3>Por modalidade</h3><div class="tabela"><table><tbody>
+    {% for r in st.por_mod %}<tr><td>{{ r.modalidade_nome or '?' }}</td><td class="r">{{ r.n }}</td></tr>{% endfor %}
+  </tbody></table></div></div>
+</div>
+{% endblock %}
