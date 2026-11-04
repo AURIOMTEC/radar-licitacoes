@@ -87,7 +87,8 @@ def num(v):
 
 
 tpl.env.filters.update(brl=brl, dt=dt, prazo=prazo, num=num)
-tpl.env.globals.update(UFS=config.UFS, MODALIDADES=config.MODALIDADES,
+tpl.env.globals.update(PRAZOS=config.PRAZO_OPCOES,
+                       UFS=config.UFS, MODALIDADES=config.MODALIDADES,
                        COLETA=config.MODALIDADES_COLETA, VERSAO=VERSAO)
 
 
@@ -103,6 +104,12 @@ def valor(s: str | None):
         return None
 
 
+def _prazo(v: str | None) -> int:
+    if v is None or v == "":
+        return config.PRAZO_MIN_PADRAO
+    return int(v) if v.isdigit() else config.PRAZO_MIN_PADRAO
+
+
 def filtros_req(req: Request) -> Filtros:
     qp = req.query_params
     return Filtros(
@@ -111,6 +118,7 @@ def filtros_req(req: Request) -> Filtros:
         modalidades=[int(m) for m in qp.getlist("mod") if m.isdigit()],
         valor_min=valor(qp.get("vmin")), valor_max=valor(qp.get("vmax")),
         incluir_encerrados=qp.get("enc") == "1",
+        prazo_min_dias=_prazo(qp.get("prazo")),
         ordem=qp.get("ordem", "encerramento"))
 
 
@@ -190,7 +198,7 @@ def busca_form(request: Request, bid: int | None = None):
         f = filtros_req(request)
         b = {"id": None, "nome": f.consulta, "consulta": f.consulta, "ufs": ",".join(f.ufs),
              "modalidades": ",".join(map(str, f.modalidades)), "valor_min": f.valor_min,
-             "valor_max": f.valor_max, "whatsapp": "", "ativo": 1}
+             "valor_max": f.valor_max, "whatsapp": "", "ativo": 1, "prazo_min": f.prazo_min_dias}
     b["ufs_l"] = [u for u in (b["ufs"] or "").split(",") if u]
     b["mods_l"] = [int(m) for m in (b["modalidades"] or "").split(",") if m.strip().isdigit()]
     return tpl.TemplateResponse(request, "busca_form.html", {"b": b, "wa_ativo": whatsapp.ativo()})
@@ -212,6 +220,7 @@ async def busca_salvar(request: Request):
         "ufs": ",".join(u for u in fm.getlist("uf") if u in config.UFS),
         "modalidades": ",".join(m for m in fm.getlist("mod") if m.isdigit()),
         "valor_min": valor(fm.get("vmin")), "valor_max": valor(fm.get("vmax")),
+        "prazo_min": _prazo(fm.get("prazo")),
         "whatsapp": ", ".join(whatsapp.numeros(fm.get("whatsapp") or "")),
         "ativo": 1 if fm.get("ativo") else 0,
     }

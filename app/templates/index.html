@@ -21,6 +21,10 @@
     </details>
     <label class="campo">Valor de <input name="vmin" value="{{ f.valor_min|num if f.valor_min is not none }}" inputmode="decimal" placeholder="mín."></label>
     <label class="campo">até <input name="vmax" value="{{ f.valor_max|num if f.valor_max is not none }}" inputmode="decimal" placeholder="máx."></label>
+    <label class="campo">Prazo para propor
+      <select name="prazo">
+        {% for d in PRAZOS %}<option value="{{d}}" {{ 'selected' if f.prazo_min_dias == d }}>{{ 'qualquer' if d == 0 else '≥ %d dias' % d }}</option>{% endfor %}
+      </select></label>
     <label class="campo">Ordenar
       <select name="ordem">
         {% for k, n in [('encerramento','Prazo mais curto'),('relevancia','Relevância'),('valor','Maior valor'),('publicacao','Mais recentes')] %}

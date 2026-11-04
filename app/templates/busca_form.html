@@ -16,6 +16,11 @@
     <label>Valor estimado mínimo <input name="vmin" value="{{ b.valor_min|num if b.valor_min is not none }}" inputmode="decimal"></label>
     <label>Valor estimado máximo <input name="vmax" value="{{ b.valor_max|num if b.valor_max is not none }}" inputmode="decimal"></label>
   </div>
+  <label>Prazo mínimo para propor
+    <select name="prazo">
+      {% for d in PRAZOS %}<option value="{{d}}" {{ 'selected' if (b.prazo_min if b.prazo_min is not none else 5) == d }}>{{ 'qualquer prazo' if d == 0 else 'encerra em %d dias ou mais' % d }}</option>{% endfor %}
+    </select>
+    <small>Editais que encerram antes disso não geram alerta (dias corridos a partir de agora).</small></label>
   <label>WhatsApp para alertas <input name="whatsapp" value="{{ b.whatsapp }}" placeholder="14998317656, 14999999999">
     <small>Separe vários números por vírgula. DDD obrigatório; o 55 é colocado automaticamente.</small></label>
   <label class="chk"><input type="checkbox" name="ativo" value="1" {{ 'checked' if b.ativo }}> Alerta ativo</label>

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import html
 from dataclasses import dataclass, field
+from datetime import timedelta
 
 from . import config, db
 from .collector import agora, iso
@@ -23,6 +24,7 @@ class Filtros:
     modalidades: list[int] = field(default_factory=list)
     valor_min: float | None = None
     valor_max: float | None = None
+    prazo_min_dias: int = 0      # encerramento a pelo menos N dias de agora
     incluir_encerrados: bool = False
     ordem: str = "encerramento"
 
@@ -30,8 +32,9 @@ class Filtros:
 def _where(f: Filtros, params: list) -> str:
     w = []
     if not f.incluir_encerrados:
+        limite = agora() + timedelta(days=max(0, f.prazo_min_dias or 0))
         w.append("(c.data_encerramento IS NULL OR c.data_encerramento >= ?)")
-        params.append(iso(agora()))
+        params.append(iso(limite))
     if f.ufs:
         w.append(f"c.uf IN ({','.join('?' * len(f.ufs))})")
         params += f.ufs

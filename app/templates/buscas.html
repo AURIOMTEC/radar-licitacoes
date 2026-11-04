@@ -14,9 +14,9 @@
   {% for b in buscas %}
   <tr class="{{ '' if b.ativo else 'off' }}">
     <td><b>{{ b.nome }}</b>{% if not b.ativo %} <span class="tag cinza">pausada</span>{% endif %}</td>
-    <td><a href="/?q={{ b.consulta|urlencode }}{% for u in b.ufs.split(',') if u %}&uf={{u}}{% endfor %}{% for m in b.modalidades.split(',') if m %}&mod={{m}}{% endfor %}"><code>{{ b.consulta }}</code></a></td>
+    <td><a href="/?q={{ b.consulta|urlencode }}{% for u in b.ufs.split(',') if u %}&uf={{u}}{% endfor %}{% for m in b.modalidades.split(',') if m %}&mod={{m}}{% endfor %}&prazo={{ b.prazo_min }}"><code>{{ b.consulta }}</code></a></td>
     <td class="mut">{{ b.ufs or 'todas UFs' }}{% if b.modalidades %} · {{ b.modalidades.split(',')|length }} modal.{% endif %}
-      {% if b.valor_min %} · ≥ {{ b.valor_min|brl }}{% endif %}{% if b.valor_max %} · ≤ {{ b.valor_max|brl }}{% endif %}</td>
+      {% if b.valor_min %} · ≥ {{ b.valor_min|brl }}{% endif %}{% if b.valor_max %} · ≤ {{ b.valor_max|brl }}{% endif %}{% if b.prazo_min %} · prazo ≥ {{ b.prazo_min }} d{% endif %}</td>
     <td class="mut">{{ b.whatsapp or '—' }}</td>
     <td>{{ b.enviados }}{% if b.ultimo %}<div class="mut">{{ b.ultimo|dt }}</div>{% endif %}</td>
     <td class="acoes">

@@ -86,6 +86,11 @@ ZAPI_INSTANCE_ID = _env("ZAPI_INSTANCE_ID")
 ZAPI_TOKEN = _env("ZAPI_TOKEN")
 ZAPI_CLIENT_TOKEN = _env("ZAPI_CLIENT_TOKEN")
 ALERTA_MAX_POR_MSG = _int("ALERTA_MAX_POR_MSG", 8)
+# Esconde editais que encerram em menos de N dias corridos (dá tempo de montar a
+# proposta). Dispensa: aviso mínimo de 3 dias úteis (art. 75 §3º Lei 14.133);
+# pregão de bens: 8 dias úteis (art. 55, I, a).
+PRAZO_MIN_PADRAO = _int("PRAZO_MIN_PADRAO", 5)
+PRAZO_OPCOES = [0, 3, 5, 10, 15]
 
 MODALIDADES = {
     1: "Leilão - Eletrônico", 2: "Diálogo Competitivo", 3: "Concurso",

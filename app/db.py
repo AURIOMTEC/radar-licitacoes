@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS buscas (
     valor_min   REAL,
     valor_max   REAL,
     whatsapp    TEXT NOT NULL DEFAULT '',   -- números separados por vírgula
+    prazo_min   INTEGER NOT NULL DEFAULT 5, -- dias mínimos até o encerramento
     ativo       INTEGER NOT NULL DEFAULT 1,
     criado_em   TEXT NOT NULL
 );
@@ -127,6 +128,10 @@ def init() -> None:
     with _lock:
         con = connect()
         con.executescript(SCHEMA)
+        # Migrações aditivas (nunca apagam): colunas criadas depois da 1ª versão
+        cols = {r[1] for r in con.execute("PRAGMA table_info(buscas)")}
+        if "prazo_min" not in cols:
+            con.execute("ALTER TABLE buscas ADD COLUMN prazo_min INTEGER NOT NULL DEFAULT 5")
         con.commit()
         con.close()
 

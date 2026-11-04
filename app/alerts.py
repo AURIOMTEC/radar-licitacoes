@@ -18,7 +18,8 @@ def filtros_da_busca(b) -> Filtros:
         consulta=b["consulta"],
         ufs=[u for u in (b["ufs"] or "").split(",") if u],
         modalidades=[int(m) for m in (b["modalidades"] or "").split(",") if m.strip().isdigit()],
-        valor_min=b["valor_min"], valor_max=b["valor_max"])
+        valor_min=b["valor_min"], valor_max=b["valor_max"],
+        prazo_min_dias=b["prazo_min"] if "prazo_min" in b.keys() else 0)
 
 
 _SQL_NAO_AVISADOS = " AND c.id NOT IN (SELECT contratacao_id FROM alertas WHERE busca_id=?)"

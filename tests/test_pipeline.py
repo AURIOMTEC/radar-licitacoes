@@ -120,11 +120,18 @@ def test_tudo(monkeypatch=None):
     assert buscar(Filtros("30cv"))["total"] == 0 or True  # "30 cv" separado no item
     assert buscar(Filtros("30 cv"))["total"] == 1
     print(to_fts('inversor "soft starter" OU nobreak -locacao'))
+    # prazo mínimo: o edital de Ourinhos encerra em ~20 h e some com prazo >= 1 dia
+    assert buscar(Filtros("inversor frequencia", prazo_min_dias=1))["total"] == 2
+    assert buscar(Filtros("inversor frequencia", prazo_min_dias=30))["total"] == 0
+    # migração aditiva: init de novo não quebra e a coluna existe
+    db.init()
+    with db.conn() as con:
+        assert "prazo_min" in {r[1] for r in con.execute("PRAGMA table_info(buscas)")}
 
     # busca salva: baseline + alerta só do novo
     with db.conn() as con:
-        bid = con.execute("INSERT INTO buscas(nome, consulta, ufs, whatsapp, criado_em) "
-                          "VALUES ('Inversores','inversor frequencia','','5514998317656','x')").lastrowid
+        bid = con.execute("INSERT INTO buscas(nome, consulta, ufs, whatsapp, criado_em, prazo_min) "
+                          "VALUES ('Inversores','inversor frequencia','','5514998317656','x', 0)").lastrowid
     assert alerts.marcar_base(bid) == 3
     assert alerts.processar_alertas(sender=lambda n, t: enviados.append((n, t)))["editais"] == 0
 
